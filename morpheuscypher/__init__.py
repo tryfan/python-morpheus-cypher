@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = """
   lookup: cypher
   author: Nick Celebic <ncelebic@morpheusdata.com>
-  version_added: "1.0"
+  version_added: "0.1.0"
   short_description: retrieve secrets from Morpheus Cypher Secret Storage
   requirements:
     - requests (python library)
