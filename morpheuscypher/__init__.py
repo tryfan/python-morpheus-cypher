@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = """
   lookup: cypher
   author: Nick Celebic <ncelebic@morpheusdata.com>
-  version_added: "0.1.0"
+  version_added: "0.1.1"
   short_description: retrieve secrets from Morpheus Cypher Secret Storage
   requirements:
     - requests (python library)
@@ -25,13 +25,19 @@ DOCUMENTATION = """
           - The Execution Lease Token used for validating temporary execution access via the morpheus command bus
       type: string
       vars:
-          - name: morpheus_token
+          - name: token
     url:
       description:
           - The Morpheus Appliance URL where the api calls need to be made
       type: string
       vars:
-          - name: morpheus_url
+          - name: url
+    morpheus:
+      description:
+          - Morpheus variable when running from the Morpheus python task type.  Pass this in as morpheus=morpheus
+      type: dict
+      vars:
+          - name: morpheus
 """
 RETURN = """
 _raw:
@@ -41,20 +47,30 @@ _raw:
 
 
 class Cypher:
-    def __init__(self, url=None, token=None):
+    def __init__(self, url=None, token=None, morpheus=None):
+        self.url = None
+        self.token = None
+
         if url is None:
-            self.url = os.environ.get("morpheus_url", None)
+            if "morpheus_url" in os.environ:
+                self.url = os.environ.get("morpheus_url", None)
+            elif morpheus is not None:
+                self.url = morpheus['morpheus']['applianceUrl']
         else:
             self.url = url
-        if url is None:
-            raise Exception("morpheus_url not specified in ENV")
+
+        if self.url is None:
+            raise Exception("url not found or specified in ENV or morpheus['morpheus']['applianceUrl']")
 
         if token is None:
-            self.token = os.environ.get("morpheus_token", None)
+            if "morpheus_token" in os.environ:
+                self.token = os.environ.get("morpheus_token", None)
+            elif morpheus is not None:
+                self.token = morpheus['morpheus']['apiAccessToken']
         else:
             self.token = token
-        if token is None:
-            raise Exception("morpheus_token not specified in ENV")
+        if self.token is None:
+            raise Exception("token not specified in ENV or morpheus['morpheus']['apiAccessToken']")
 
     @staticmethod
     def _get_item(response, path):
