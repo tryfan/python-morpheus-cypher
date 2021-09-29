@@ -5,12 +5,13 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import warnings
 import requests
+from distutils.version import LooseVersion
 
 __metaclass__ = type
 DOCUMENTATION = """
   lookup: cypher
   author: Nick Celebic <ncelebic@morpheusdata.com>
-  version_added: "0.1.1"
+  version_added: "0.1.2"
   short_description: retrieve secrets from Morpheus Cypher Secret Storage
   requirements:
     - requests (python library)
@@ -38,6 +39,12 @@ DOCUMENTATION = """
       type: dict
       vars:
           - name: morpheus
+    ssl_verify:
+      description:
+          - Specify strict SSL verification, default is True
+      type: bool
+      vars:
+          - name: ssl_verify
 """
 RETURN = """
 _raw:
@@ -47,10 +54,12 @@ _raw:
 
 
 class Cypher:
-    def __init__(self, url=None, token=None, morpheus=None):
+    def __init__(self, url=None, token=None, morpheus=None, ssl_verify=True):
         self.url = None
         self.token = None
-
+        self.cypher_endpoint = None
+        self.ssl_verify = ssl_verify
+        
         if url is None:
             if "morpheus_url" in os.environ:
                 self.url = os.environ.get("morpheus_url", None)
@@ -71,6 +80,7 @@ class Cypher:
             self.token = token
         if self.token is None:
             raise Exception("token not specified in ENV or morpheus['morpheus']['apiAccessToken']")
+        self.set_cypher_endpoint()
 
     @staticmethod
     def _get_item(response, path):
@@ -79,6 +89,19 @@ class Cypher:
                 item = int(item)
             response = response[item]
         return response
+
+    def set_cypher_endpoint(self):
+        appliance_url = self.url
+        url = appliance_url + "/api/ping"
+        headers = {'content-type': 'application/json', 'X-Cypher-Token': self.token}
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=Warning)
+            r = requests.get(url=url, verify=self.ssl_verify)
+        data = r.json()
+        if LooseVersion(data['buildVersion']) < LooseVersion('5.3.3'):
+            self.cypher_endpoint = "/api/cypher/v1/"
+        else:
+            self.cypher_endpoint = "/api/cypher/"
 
     def get(self, secret_input):
         s_f = secret_input.split(':', 1)
@@ -91,7 +114,7 @@ class Cypher:
         else:
             secret_path = ''
         appliance_url = self.url
-        url = appliance_url + '/api/cypher/v1/' + secret
+        url = appliance_url + self.cypher_endpoint + secret
         headers = {'content-type': 'application/json', 'X-Cypher-Token': self.token}
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=Warning)
@@ -100,7 +123,7 @@ class Cypher:
         if data is None:
             raise Exception("The secret %s doesn't seem to exist for cypher lookup" % secret)
         if not data['success']:
-            raise Exception("The secret %s doesn't seem to exist for cypher lookup" % secret)
+            raise Exception(data['msg'])
         if secret_path == '':
             return data['data']
         try:
