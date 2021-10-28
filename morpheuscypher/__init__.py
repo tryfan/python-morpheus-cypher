@@ -1,4 +1,4 @@
-# (c) 2020, Nick Celebic <ncelebic@morpheusdata.com>
+# (c) 2021, Nick Celebic <ncelebic@morpheusdata.com>
 # Apache 2 License
 
 from __future__ import (absolute_import, division, print_function)
@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = """
   lookup: cypher
   author: Nick Celebic <ncelebic@morpheusdata.com>
-  version_added: "0.1.2"
+  version_added: "0.1.3"
   short_description: retrieve secrets from Morpheus Cypher Secret Storage
   requirements:
     - requests (python library)

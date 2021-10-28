@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name='morpheus-cypher',
-    version='0.1.2',
+    version='0.1.3',
     description='Retrieve secrets from Morpheus Cypher Secret Storage',
     author='Nick Celebic',
     author_email='ncelebic@morpheusdata.com',
