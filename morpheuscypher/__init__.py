@@ -70,6 +70,8 @@ class Cypher:
 
         if self.url is None:
             raise Exception("url not found or specified in ENV or morpheus['morpheus']['applianceUrl']")
+        else:
+            self.url = self.url.rstrip('/')
 
         if token is None:
             if "morpheus_token" in os.environ:
