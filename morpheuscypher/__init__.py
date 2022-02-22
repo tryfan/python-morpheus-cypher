@@ -95,10 +95,10 @@ class Cypher:
     def set_cypher_endpoint(self):
         appliance_url = self.url
         url = appliance_url + "/api/ping"
-        headers = {'content-type': 'application/json', 'X-Cypher-Token': self.token}
+        headers = {'content-type': 'application/json', 'Authorization': "BEARER %s" % self.token}
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=Warning)
-            r = requests.get(url=url, verify=self.ssl_verify)
+            r = requests.get(url=url, headers=headers, verify=self.ssl_verify)
         data = r.json()
         if LooseVersion(data['buildVersion']) < LooseVersion('5.3.3'):
             self.cypher_endpoint = "/api/cypher/v1/"
