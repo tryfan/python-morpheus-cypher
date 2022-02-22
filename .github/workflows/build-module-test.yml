@@ -1,4 +1,4 @@
-name: Build Python Module
+name: Build Test Python Module
 on: [workflow_dispatch, pull_request]
 jobs:
   build-module:
