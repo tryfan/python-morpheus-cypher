@@ -1,0 +1,28 @@
+name: Build Python Module
+on: [workflow_dispatch, pull_request]
+jobs:
+  build-module:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      
+      - name: Add datetime to version for testing
+        run: |
+          CYPHERVERSION=$(cut -d '"' -f 2 morpheuscypher/version.py)
+          DATE=`date +"%Y%m%d%H%M"`
+          echo "__version__ = \"${CYPHERVERSION}${DATE}\"" > morpheuscypher/version.py
+
+      - name: Build binary wheel
+        run: python setup.py sdist
+      
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.test_pypi_api_key }}
+          repository_url: https://test.pypi.org/legacy/

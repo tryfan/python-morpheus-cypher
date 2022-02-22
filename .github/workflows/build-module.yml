@@ -1,5 +1,9 @@
 name: Build Python Module
-on: [workflow_dispatch, pull_request]
+on:
+  workflow_dispatch:    
+  push:
+    tags:
+      - 'v*'
 jobs:
   build-module:
     runs-on: ubuntu-latest
@@ -12,17 +16,39 @@ jobs:
         with:
           python-version: 3.8
       
-      - name: Add datetime to version for testing
-        run: |
-          CYPHERVERSION=$(cut -d '"' -f 2 morpheuscypher/version.py)
-          DATE=`date +"%Y%m%d%H%M"`
-          echo "__version__ = \"${CYPHERVERSION}${DATE}\"" > morpheuscypher/version.py
-
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(cut -d '"' -f 2 morpheuscypher/version.py)
+      
       - name: Build binary wheel
         run: python setup.py sdist
       
-      - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@master
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.0
         with:
-          password: ${{ secrets.test_pypi_api_key }}
-          repository_url: https://test.pypi.org/legacy/
+          name: "morpheus-cypher-${{ steps.get_version.outputs.VERSION }}.tar.gz"
+          path: /home/runner/work/python-morpheus-cypher/python-morpheus-cypher/dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 10
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: true
+      
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "/home/runner/work/python-morpheus-cypher/python-morpheus-cypher/dist/morpheus-cypher-${{ steps.get_version.outputs.VERSION }}.tar.gz"
+          asset_name: "morpheus-cypher-${{ steps.get_version.outputs.VERSION }}.tar.gz"
+          asset_content_type: "application/gzip"
