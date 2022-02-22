@@ -12,6 +12,12 @@ jobs:
         with:
           python-version: 3.8
       
+      - name: Add datetime to version for testing
+        run: |
+          CYPHERVERSION=$(cut -d '"' -f 2 morpheuscypher/version.py)
+          DATE=`date +"%Y%m%d%H%M"`
+          echo "__version__ = \"${CYPHERVERSION}${DATE}\"" > morpheuscypher/version.py
+
       - name: Build binary wheel
         run: python setup.py sdist
       

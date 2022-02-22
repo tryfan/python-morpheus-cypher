@@ -1,9 +1,19 @@
 #!/usr/bin/env python
 import setuptools
+import os
+
+
+def get_version():
+    version_filepath = os.path.join(os.path.dirname(__file__), "morpheuscypher", "version.py")
+    with open(version_filepath) as f:
+        for line in f:
+            if line.startswith("__version__"):
+                return line.strip().split()[-1][1:-1]
+
 
 setuptools.setup(
     name='morpheus-cypher',
-    version='0.1.3',
+    version=get_version(),
     description='Retrieve secrets from Morpheus Cypher Secret Storage',
     author='Nick Celebic',
     author_email='ncelebic@morpheusdata.com',
