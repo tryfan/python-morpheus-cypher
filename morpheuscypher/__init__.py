@@ -167,3 +167,16 @@ class Cypher:
         if not response['success']:
             raise Exception(response['msg'])
         return response['data']
+    def delete(self, secret_key):
+        appliance_url = self.url
+        url = appliance_url + self.cypher_endpoint + secret_key
+        headers = {'content-type': 'application/json', 'X-Cypher-Token': self.token}
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=Warning)
+            r = requests.delete(url=url, headers=headers, verify=self.ssl_verify)
+        response = r.json()
+        if response is None:
+            raise Exception("The secret %s did not delete correctly, no response data was returned" % secret_key)
+        if not response['success']:
+            raise Exception(response['msg'])
+        return response['success']
