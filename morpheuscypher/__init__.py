@@ -133,7 +133,7 @@ class Cypher:
         except:
             raise Exception("The secret %s does not contain the path '%s'. for cypher lookup" %
                             (secret, ":".join(secret_path)))
-    def write(self, secret_key, secret_value, ttl=0):
+    def write(self, secret_key, secret_value=None, ttl=0):
         appliance_url = self.url
         url = appliance_url + self.cypher_endpoint + secret_key
         headers = {'content-type': 'application/json', 'X-Cypher-Token': self.token}
