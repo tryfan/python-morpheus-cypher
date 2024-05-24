@@ -133,3 +133,37 @@ class Cypher:
         except:
             raise Exception("The secret %s does not contain the path '%s'. for cypher lookup" %
                             (secret, ":".join(secret_path)))
+    def write(self, secret_key, secret_value, ttl=0):
+        appliance_url = self.url
+        url = appliance_url + self.cypher_endpoint + secret_key
+        headers = {'content-type': 'application/json', 'X-Cypher-Token': self.token}
+        generating_cypher_types = [
+            'uuid',
+            'key',
+            'password'
+        ]
+        cypher_mount_type = secret_key.split('/')[0].lower()
+        if cypher_mount_type in generating_cypher_types:
+            params = {
+                "ttl": ttl
+            }
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=Warning)
+                r = requests.post(url=url, params=params, headers=headers, verify=self.ssl_verify)
+        else:
+            params = {
+                "type": "string",
+                "ttl": ttl
+            }
+            json = {
+                "value": secret_value
+            }
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=Warning)
+                r = requests.post(url=url, params=params, headers=headers, json=json, verify=self.ssl_verify)
+        response = r.json()
+        if response is None:
+            raise Exception("The secret %s did not write correctly, no response data was returned" % secret_key)
+        if not response['success']:
+            raise Exception(response['msg'])
+        return response['data']
