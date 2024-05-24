@@ -133,3 +133,66 @@ class Cypher:
         except:
             raise Exception("The secret %s does not contain the path '%s'. for cypher lookup" %
                             (secret, ":".join(secret_path)))
+    def write(self, secret_key, secret_value, ttl=0):
+        s_f = secret_key.split(':', 1)
+        secret = s_f[0]
+        if len(s_f) >= 2:
+            if ':' in s_f[1]:
+                secret_path = s_f[1].split(':')
+            else:
+                secret_path = [s_f[1]]
+        else:
+            secret_path = ''
+        appliance_url = self.url
+        headers = {'content-type': 'application/json', 'X-Cypher-Token': self.token}
+        generating_cyphers = [
+            'uuid',
+            'key',
+            'password'
+        ]
+        cypher_mount = secret.split('/')[0].lower()
+        cypher_key = secret.split('/')[1]
+        if cypher_mount in generating_cyphers:
+            url = appliance_url + self.cypher_endpoint + cypher_mount + cypher_key
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=Warning)
+                r = requests.post(url=url, headers=headers, verify=self.ssl_verify)
+            response = r.json()
+            if response is None:
+                raise Exception("The secret %s did not write correctly, no response data was returned" % secret)
+            if not response['success']:
+                raise Exception(response['msg'])
+            if secret_path == '':
+                return response['data']
+            try:
+                return self._get_item(response['data'], secret_path)
+            except:
+                raise Exception("The secret %s does not contain the path '%s'. for cypher lookup" %
+                            (secret, ":".join(secret_path)))
+        else:
+            params = {
+                "type": "string",
+                "ttl:": ttl
+            }
+            data = {
+                "value": secret_value
+            }
+            url = appliance_url + self.cypher_endpoint + cypher_mount + cypher_key
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=Warning)
+                r = requests.post(url=url, params=params, headers=headers, data=data, verify=self.ssl_verify)
+            response = r.json()
+            if response is None:
+                raise Exception("The secret %s did not write correctly, no response data was returned" % secret)
+            if not response['success']:
+                raise Exception(response['msg'])
+            if secret_path == '':
+                return response['data']
+            try:
+                return self._get_item(response['data'], secret_path)
+            except:
+                raise Exception("The secret %s does not contain the path '%s'. for cypher lookup" %
+                            (secret, ":".join(secret_path)))
+        
+        
+        
