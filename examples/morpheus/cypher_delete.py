@@ -1,2 +1,2 @@
 from morpheuscypher import Cypher
-print(f"Cypher value:  {Cypher(morpheus=morpheus,ssl_verify=False).write('secret/cypherTest')}")
+print(f"Cypher value:  {Cypher(morpheus=morpheus,ssl_verify=False).delete('secret/cypherTest')}")
