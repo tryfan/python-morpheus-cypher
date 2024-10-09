@@ -99,11 +99,17 @@ class Cypher:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=Warning)
             r = requests.get(url=url, headers=headers, verify=self.ssl_verify)
-        data = r.json()
-        if LooseVersion(data['buildVersion']) < LooseVersion('5.3.3'):
+        try:
+            data = r.json()
+            # Check if 'buildVersion' is present
+            if 'buildVersion' in data and LooseVersion(data['buildVersion']) >= LooseVersion('5.3.3'):
+              self.cypher_endpoint = "/api/cypher/"
+            else:
+                # Use the fallback endpoint if buildVersion is missing or < 5.3.3
+                self.cypher_endpoint = "/api/cypher/v1/"
+        except (ValueError, KeyError):
+            # Fallback to /api/cypher/v1/ if there's a JSON error or missing 'buildVersion'
             self.cypher_endpoint = "/api/cypher/v1/"
-        else:
-            self.cypher_endpoint = "/api/cypher/"
 
     def get(self, secret_input):
         s_f = secret_input.split(':', 1)
