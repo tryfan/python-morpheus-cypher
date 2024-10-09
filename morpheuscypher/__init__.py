@@ -5,13 +5,12 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import warnings
 import requests
-from distutils.version import LooseVersion
 
 __metaclass__ = type
 DOCUMENTATION = """
   lookup: cypher
   author: Nick Celebic <ncelebic@morpheusdata.com>
-  version_added: "0.1.3"
+  version_added: "0.3.0"
   short_description: retrieve secrets from Morpheus Cypher Secret Storage
   requirements:
     - requests (python library)
@@ -45,6 +44,12 @@ DOCUMENTATION = """
       type: bool
       vars:
           - name: ssl_verify
+    cypher_endpoint:
+        description:
+            - Specify the cypher endpoint, default is /api/cypher/
+        type: string
+        vars:
+            - name: cypher_endpoint
 """
 RETURN = """
 _raw:
@@ -54,10 +59,9 @@ _raw:
 
 
 class Cypher:
-    def __init__(self, url=None, token=None, morpheus=None, ssl_verify=True):
+    def __init__(self, url=None, token=None, morpheus=None, ssl_verify=True, cypher_endpoint=None):
         self.url = None
         self.token = None
-        self.cypher_endpoint = None
         self.ssl_verify = ssl_verify
         
         if url is None:
@@ -82,7 +86,10 @@ class Cypher:
             self.token = token
         if self.token is None:
             raise Exception("token not specified in ENV or morpheus['morpheus']['apiAccessToken']")
-        self.set_cypher_endpoint()
+        if cypher_endpoint is None:
+            self.cypher_endpoint = "/api/cypher/"
+        else:
+            self.cypher_endpoint = cypher_endpoint
 
     @staticmethod
     def _get_item(response, path):
@@ -91,25 +98,6 @@ class Cypher:
                 item = int(item)
             response = response[item]
         return response
-
-    def set_cypher_endpoint(self):
-        appliance_url = self.url
-        url = appliance_url + "/api/ping"
-        headers = {'content-type': 'application/json', 'Authorization': "BEARER %s" % self.token}
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=Warning)
-            r = requests.get(url=url, headers=headers, verify=self.ssl_verify)
-        try:
-            data = r.json()
-            # Check if 'buildVersion' is present
-            if 'buildVersion' in data and LooseVersion(data['buildVersion']) >= LooseVersion('5.3.3'):
-              self.cypher_endpoint = "/api/cypher/"
-            else:
-                # Use the fallback endpoint if buildVersion is missing or < 5.3.3
-                self.cypher_endpoint = "/api/cypher/v1/"
-        except (ValueError, KeyError):
-            # Fallback to /api/cypher/v1/ if there's a JSON error or missing 'buildVersion'
-            self.cypher_endpoint = "/api/cypher/v1/"
 
     def get(self, secret_input):
         s_f = secret_input.split(':', 1)

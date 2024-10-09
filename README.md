@@ -21,6 +21,7 @@ When creating connection:
 - `token`: Morpheus token
 - `morpheus`: Morpheus variable when running from the Morpheus python task type.  Pass this in as morpheus=morpheus
 - `ssl_verify`: Specify strict SSL verification, default is True
+- `cypher_endpoint`: If using Morpheus version < 5.3.3, set this to `/api/cypher/v1/`
 
 ## Get
 When getting a secret, use `<type>/<name>` eg. `secret/test`
