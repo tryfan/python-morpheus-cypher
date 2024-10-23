@@ -78,14 +78,13 @@ class Cypher:
             self.url = self.url.rstrip('/')
 
         if token is None:
-            self.token = os.environ.get("morpheus_token", None)
-
+            self.token = os.environ.get('morpheus_token', None)
             if not self.token and morpheus:
-                self.token = morpheus.get("executionLeaseToken", None) or morpheus['morpheus']['apiAccessToken']                   
+                self.token = morpheus.get('executionLeaseToken', None) or morpheus['morpheus']['apiAccessToken']
         else:
             self.token = token
         if self.token is None:
-            raise Exception("token not specified in ENV or morpheus['morpheus']['apiAccessToken']")
+            raise Exception("token not specified in ENV or morpheus['executionLeaseToken'] or morpheus['morpheus']['apiAccessToken']")
         if cypher_endpoint is None:
             self.cypher_endpoint = "/api/cypher/"
         else:
